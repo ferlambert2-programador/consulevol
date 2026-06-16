@@ -128,7 +128,7 @@ export default function VademecumModal({ onCerrar, onSeleccionar }: Props) {
         </div>
 
         <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0">
-          <p className="text-xs text-slate-400 text-center">96 medicamentos · Base local · Verificar dosis antes de prescribir</p>
+          <p className="text-xs text-slate-400 text-center">180 medicamentos · Base local · Verificar dosis antes de prescribir</p>
         </div>
       </div>
     </div>
