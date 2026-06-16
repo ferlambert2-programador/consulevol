@@ -36,12 +36,13 @@ const certStyles = StyleSheet.create({
   },
 })
 
-export type TipoCertificado = 'laboral' | 'buena_salud' | 'aptitud_fisica'
+export type TipoCertificado = 'laboral' | 'buena_salud' | 'aptitud_fisica' | 'reposo_laboral'
 
 const TITULOS: Record<TipoCertificado, string> = {
   laboral: 'CERTIFICADO MÉDICO LABORAL',
   buena_salud: 'CERTIFICADO DE BUENA SALUD',
   aptitud_fisica: 'CERTIFICADO DE APTITUD FÍSICA',
+  reposo_laboral: 'CERTIFICADO DE REPOSO LABORAL',
 }
 
 function calcularEdad(fn: string | null): number | null {
@@ -71,6 +72,8 @@ function introduccion(paciente: Paciente, tipo: TipoCertificado, medico: MedicoD
       return `El suscripto, ${medico.nombre} (${medico.matricula}), certifica haber examinado en el día de la fecha a ${paciente.apellido}, ${paciente.nombre}${edadStr}${cobertura}, quien presenta buen estado de salud general.`
     case 'aptitud_fisica':
       return `El suscripto, ${medico.nombre} (${medico.matricula}), certifica haber realizado evaluación clínica a ${paciente.apellido}, ${paciente.nombre}${edadStr}${cobertura}, quien se encuentra en condiciones físicas aptas para la práctica de actividad física.`
+    case 'reposo_laboral':
+      return ''
   }
 }
 
@@ -97,10 +100,12 @@ export function PDFCertificado({ paciente, tipo, textoDictado, medico = MEDICO_D
         <Text style={certStyles.tituloCert}>{TITULOS[tipo]}</Text>
         <Text style={certStyles.subtituloCert}>{medico.lugar}, Buenos Aires</Text>
 
-        <Text style={certStyles.cuerpoLegal}>{intro}</Text>
+        {tipo !== 'reposo_laboral' && (
+          <Text style={certStyles.cuerpoLegal}>{intro}</Text>
+        )}
 
         {textoDictado && (
-          <Text style={[certStyles.cuerpoLegal, { marginTop: 16 }]}>
+          <Text style={[certStyles.cuerpoLegal, { marginTop: tipo === 'reposo_laboral' ? 0 : 16 }]}>
             {textoDictado}
           </Text>
         )}
