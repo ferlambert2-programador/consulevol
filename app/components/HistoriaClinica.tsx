@@ -19,8 +19,8 @@ interface ConsultaConEvolucion extends Consulta {
 }
 
 function formatFechaLarga(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  const fecha = new Date(Number(y), Number(m) - 1, Number(d))
+  const partes = iso.split('T')[0].split('-')
+  const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]))
   return fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
@@ -41,6 +41,11 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
   const [cargando, setCargando] = useState(true)
   const [expandida, setExpandida] = useState<string | null>(null)
   const [copiado, setCopiado] = useState<string | null>(null)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [textoEdit, setTextoEdit] = useState('')
+  const [guardandoEdit, setGuardandoEdit] = useState(false)
+  const [confirmBorrar, setConfirmBorrar] = useState<string | null>(null)
+  const [borrando, setBorrando] = useState(false)
   const supabase = createClient()
 
   const cargar = async () => {
@@ -68,6 +73,37 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
     await navigator.clipboard.writeText(texto)
     setCopiado(id)
     setTimeout(() => setCopiado(null), 2000)
+  }
+
+  const iniciarEdicion = (evolucion: Evolucion) => {
+    setEditandoId(evolucion.id)
+    setTextoEdit(evolucion.texto_redactado)
+  }
+
+  const guardarEdicion = async (consultaId: string, evolucionId: string) => {
+    if (!textoEdit.trim()) return
+    setGuardandoEdit(true)
+    const { error } = await supabase
+      .from('evoluciones')
+      .update({ texto_redactado: textoEdit.trim(), updated_at: new Date().toISOString() })
+      .eq('id', evolucionId)
+    if (!error) {
+      setConsultas(prev => prev.map(c =>
+        c.id === consultaId && c.evolucion
+          ? { ...c, evolucion: { ...c.evolucion, texto_redactado: textoEdit.trim() } }
+          : c
+      ))
+      setEditandoId(null)
+    }
+    setGuardandoEdit(false)
+  }
+
+  const borrarConsulta = async (consultaId: string) => {
+    setBorrando(true)
+    await supabase.from('consultas').delete().eq('id', consultaId)
+    setConsultas(prev => prev.filter(c => c.id !== consultaId))
+    setConfirmBorrar(null)
+    setBorrando(false)
   }
 
   return (
@@ -127,6 +163,8 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
       {consultas.map((consulta, idx) => {
         const abierta = expandida === consulta.id
         const esReciente = idx === 0
+        const editando = consulta.evolucion && editandoId === consulta.evolucion.id
+        const confirmar = confirmBorrar === consulta.id
 
         return (
           <div
@@ -176,58 +214,155 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
               <div className="px-5 pb-5 border-t border-slate-100">
                 {consulta.evolucion ? (
                   <div className="mt-4 space-y-3">
-                    <div className="bg-slate-50 rounded-xl p-4">
-                      <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
-                        {consulta.evolucion.texto_redactado}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <ExportarPDF
-                        modo="consulta"
-                        paciente={paciente}
-                        consulta={consulta}
-                        evolucion={consulta.evolucion!}
-                        medico={medico}
-                      />
-                      <button
-                        onClick={() => copiar(consulta.evolucion!.texto_redactado, consulta.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          copiado === consulta.id
-                            ? 'bg-green-500 text-white'
-                            : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {copiado === consulta.id ? '✅ Copiado' : '📋 Copiar'}
-                      </button>
-                      {paciente.telefono && (
-                        <button
-                          onClick={() => abrirWhatsApp(
-                            paciente.telefono!,
-                            `Hola ${paciente.nombre}, le enviamos un resumen de su consulta del ${formatFechaLarga(consulta.fecha)}:\n\n${consulta.evolucion?.texto_redactado || ''}`
-                          )}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-300 text-green-700 hover:bg-green-50 transition-colors"
-                        >
-                          <WhatsAppIcon />
-                          Paciente
-                        </button>
-                      )}
-                      {medico?.telefono_secretaria && (
-                        <button
-                          onClick={() => abrirWhatsApp(
-                            medico.telefono_secretaria!,
-                            `Evolución ${paciente.apellido}, ${paciente.nombre} — ${formatFechaLarga(consulta.fecha)}:\n\n${consulta.evolucion?.texto_redactado || ''}`
-                          )}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-300 text-green-700 hover:bg-green-50 transition-colors"
-                        >
-                          <WhatsAppIcon />
-                          Secretaría
-                        </button>
-                      )}
-                    </div>
+                    {/* Modo edición */}
+                    {editando ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={textoEdit}
+                          onChange={(e) => setTextoEdit(e.target.value)}
+                          rows={7}
+                          autoFocus
+                          className="w-full border border-teal-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition resize-none leading-relaxed"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => setEditandoId(null)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={() => guardarEdicion(consulta.id, consulta.evolucion!.id)}
+                            disabled={guardandoEdit}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white transition-colors"
+                          >
+                            {guardandoEdit ? 'Guardando...' : '✓ Guardar'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-slate-50 rounded-xl p-4">
+                          <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+                            {consulta.evolucion.texto_redactado}
+                          </p>
+                        </div>
+
+                        {/* Botones de acción */}
+                        <div className="flex flex-wrap justify-between gap-2">
+                          {/* Izquierda: editar y borrar */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => iniciarEdicion(consulta.evolucion!)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                            >
+                              ✏️ Editar
+                            </button>
+                            {!confirmar ? (
+                              <button
+                                onClick={() => setConfirmBorrar(consulta.id)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                              >
+                                🗑 Borrar
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-red-600 font-semibold">¿Borrar consulta?</span>
+                                <button
+                                  onClick={() => borrarConsulta(consulta.id)}
+                                  disabled={borrando}
+                                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors disabled:bg-slate-300"
+                                >
+                                  {borrando ? '...' : 'Sí, borrar'}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmBorrar(null)}
+                                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Derecha: PDF, copiar, WhatsApp */}
+                          <div className="flex flex-wrap gap-2">
+                            <ExportarPDF
+                              modo="consulta"
+                              paciente={paciente}
+                              consulta={consulta}
+                              evolucion={consulta.evolucion!}
+                              medico={medico}
+                            />
+                            <button
+                              onClick={() => copiar(consulta.evolucion!.texto_redactado, consulta.id)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                copiado === consulta.id
+                                  ? 'bg-green-500 text-white'
+                                  : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {copiado === consulta.id ? '✅ Copiado' : '📋 Copiar'}
+                            </button>
+                            {paciente.telefono && (
+                              <button
+                                onClick={() => abrirWhatsApp(
+                                  paciente.telefono!,
+                                  `Hola ${paciente.nombre}, le enviamos un resumen de su consulta del ${formatFechaLarga(consulta.fecha)}:\n\n${consulta.evolucion?.texto_redactado || ''}`
+                                )}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-300 text-green-700 hover:bg-green-50 transition-colors"
+                              >
+                                <WhatsAppIcon />
+                                Paciente
+                              </button>
+                            )}
+                            {medico?.telefono_secretaria && (
+                              <button
+                                onClick={() => abrirWhatsApp(
+                                  medico.telefono_secretaria!,
+                                  `Evolución ${paciente.apellido}, ${paciente.nombre} — ${formatFechaLarga(consulta.fecha)}:\n\n${consulta.evolucion?.texto_redactado || ''}`
+                                )}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-300 text-green-700 hover:bg-green-50 transition-colors"
+                              >
+                                <WhatsAppIcon />
+                                Secretaría
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
-                  <div className="mt-4 text-center py-4">
-                    <p className="text-slate-400 text-sm">Esta consulta no tiene evolución registrada</p>
+                  <div className="mt-4 space-y-3">
+                    <p className="text-slate-400 text-sm text-center">Esta consulta no tiene evolución registrada</p>
+                    <div className="flex justify-center">
+                      {!confirmar ? (
+                        <button
+                          onClick={() => setConfirmBorrar(consulta.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          🗑 Borrar consulta vacía
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-red-600 font-semibold">¿Borrar esta consulta?</span>
+                          <button
+                            onClick={() => borrarConsulta(consulta.id)}
+                            disabled={borrando}
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors"
+                          >
+                            {borrando ? '...' : 'Sí'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmBorrar(null)}
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            No
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
