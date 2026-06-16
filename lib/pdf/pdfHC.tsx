@@ -24,7 +24,7 @@ function calcularEdad(fn: string | null): string | undefined {
 }
 
 function formatFecha(iso: string): string {
-  const [y, m, d] = iso.split('-')
+  const [y, m, d] = iso.split('T')[0].split('-')
   return `${d}/${m}/${y}`
 }
 
