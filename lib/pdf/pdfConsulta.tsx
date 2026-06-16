@@ -20,8 +20,8 @@ function calcularEdad(fn: string | null): string | undefined {
 }
 
 function formatFechaLarga(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  const fecha = new Date(Number(y), Number(m) - 1, Number(d))
+  const partes = iso.split('T')[0].split('-')
+  const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]))
   return fecha.toLocaleDateString('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
