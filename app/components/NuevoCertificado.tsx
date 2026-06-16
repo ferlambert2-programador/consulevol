@@ -18,35 +18,14 @@ const TIPOS: { id: TipoCertificado; label: string; descripcion: string }[] = [
   { id: 'aptitud_fisica', label: 'Aptitud física', descripcion: 'Apto para práctica deportiva' },
 ]
 
-function limpiarTelefono(tel: string): string {
-  const limpio = tel.replace(/\D/g, '')
-  if (limpio.startsWith('549')) return limpio
-  if (limpio.startsWith('54')) return limpio
-  if (limpio.startsWith('0')) return '54' + limpio.slice(1)
-  return '549' + limpio
-}
-
-function abrirWhatsApp(telefono: string, texto: string) {
-  window.open(`https://wa.me/${limpiarTelefono(telefono)}?text=${encodeURIComponent(texto)}`, '_blank')
-}
-
-function abrirEmail(email: string, subject: string, body: string) {
-  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
-}
-
-const TIPO_LABELS: Record<TipoCertificado, string> = {
-  laboral: 'laboral',
-  reposo_laboral: 'de reposo laboral',
-  buena_salud: 'de buena salud',
-  aptitud_fisica: 'de aptitud física',
-}
-
 const TIPO_TITULOS: Record<TipoCertificado, string> = {
   laboral: 'CERTIFICADO MÉDICO LABORAL',
   reposo_laboral: 'CERTIFICADO DE REPOSO LABORAL',
   buena_salud: 'CERTIFICADO DE BUENA SALUD',
   aptitud_fisica: 'CERTIFICADO DE APTITUD FÍSICA',
 }
+
+type Destino = 'paciente' | 'secretaria'
 
 export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) {
   const [tipo, setTipo] = useState<TipoCertificado>('laboral')
@@ -56,6 +35,7 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
   const [transcribiendo, setTranscribiendo] = useState(false)
   const [redactando, setRedactando] = useState(false)
   const [generando, setGenerando] = useState(false)
+  const [compartiendo, setCompartiendo] = useState<Destino | null>(null)
   const [error, setError] = useState('')
   const [paso, setPaso] = useState<'dictado' | 'revision'>('dictado')
 
@@ -63,6 +43,9 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
   const chunksRef = useRef<Blob[]>([])
 
   const esReposo = tipo === 'reposo_laboral'
+  const ocupado = generando || compartiendo !== null
+  const apellidoLimpio = paciente.apellido.replace(/\s+/g, '_')
+  const nombreArchivo = `Certificado_${tipo}_${apellidoLimpio}.pdf`
 
   const toggleGrabacion = async () => {
     if (grabando) { mediaRecorderRef.current?.stop(); setGrabando(false); return }
@@ -110,12 +93,11 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
     finally { setRedactando(false) }
   }
 
-  const generarPDF = async () => {
-    setGenerando(true); setError('')
+  const generarBlob = async (): Promise<Blob | null> => {
     try {
       const { pdf } = await import('@react-pdf/renderer')
       const { PDFCertificado } = await import('@/lib/pdf/pdfCertificado')
-      const blob = await pdf(
+      return await pdf(
         <PDFCertificado
           paciente={paciente}
           tipo={tipo}
@@ -123,20 +105,47 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
           medico={medico}
         />
       ).toBlob()
+    } catch { return null }
+  }
+
+  const descargar = async () => {
+    setGenerando(true); setError('')
+    const blob = await generarBlob()
+    if (!blob) { setError('Error al generar PDF'); setGenerando(false); return }
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = nombreArchivo; a.click()
+    URL.revokeObjectURL(url)
+    setGenerando(false)
+  }
+
+  const compartir = async (destino: Destino) => {
+    setCompartiendo(destino); setError('')
+    const blob = await generarBlob()
+    if (!blob) { setError('Error al generar PDF'); setCompartiendo(null); return }
+
+    const file = new File([blob], nombreArchivo, { type: 'application/pdf' })
+    const titulo = `${TIPO_TITULOS[tipo]} — ${paciente.apellido}, ${paciente.nombre}`
+    const texto = destino === 'paciente'
+      ? `Hola ${paciente.nombre}, le enviamos su certificado médico.`
+      : `Certificado de ${paciente.apellido}, ${paciente.nombre} para archivo.`
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: titulo, text: texto })
+      } catch (e: any) {
+        if (e.name !== 'AbortError') setError('No se pudo compartir')
+      }
+    } else {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      const apellido = paciente.apellido.replace(/\s+/g, '_')
-      a.download = `Certificado_${tipo}_${apellido}.pdf`
-      a.click()
+      a.href = url; a.download = nombreArchivo; a.click()
       URL.revokeObjectURL(url)
-    } catch (e: any) {
-      setError('Error al generar PDF: ' + e.message)
-    } finally { setGenerando(false) }
+    }
+    setCompartiendo(null)
   }
 
   const nombreMedico = medico?.nombre || 'Dr. Fernando Lambert'
-  const textoEmail = `${TIPO_TITULOS[tipo]}\n\n${paciente.apellido}, ${paciente.nombre}\n\n${textoCertificado}\n\n${nombreMedico} — ${medico?.matricula || 'MP 115.740'}`
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -172,9 +181,7 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
                   tipo === t.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <span className={`font-semibold block ${tipo === t.id ? 'text-violet-700' : 'text-slate-700'}`}>
-                  {t.label}
-                </span>
+                <span className={`font-semibold block ${tipo === t.id ? 'text-violet-700' : 'text-slate-700'}`}>{t.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{t.descripcion}</span>
               </button>
             ))}
@@ -187,13 +194,11 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
               {esReposo ? 'Contenido del certificado de reposo' : 'Observaciones adicionales (opcional)'}
             </label>
-
             {esReposo && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-xs text-amber-700">
                 Dictá los días de reposo, diagnóstico y cualquier indicación. La IA solo corregirá la gramática.
               </div>
             )}
-
             <button
               onClick={toggleGrabacion}
               disabled={transcribiendo}
@@ -241,10 +246,8 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
         {paso === 'revision' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vista previa del texto</label>
-              <button onClick={() => setPaso('dictado')} className="text-xs text-violet-600 hover:text-violet-700 font-medium">
-                ← Volver
-              </button>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vista previa</label>
+              <button onClick={() => setPaso('dictado')} className="text-xs text-violet-600 hover:text-violet-700 font-medium">← Volver</button>
             </div>
 
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3 text-sm text-slate-700">
@@ -259,9 +262,8 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
               <p className="font-semibold text-teal-700 text-xs">{nombreMedico} — {medico?.matricula || 'MP 115.740'}</p>
             </div>
 
-            {/* Editar texto */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Editar texto del certificado</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Editar texto</label>
               <textarea
                 value={textoCertificado}
                 onChange={(e) => setTextoCertificado(e.target.value)}
@@ -272,54 +274,41 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
-            <div className="flex gap-3">
-              <button onClick={onCerrar} className="flex-1 border border-slate-300 text-slate-600 font-semibold py-3 rounded-xl hover:bg-slate-50 transition-colors text-sm">
-                Cancelar
+            {/* Botón descargar */}
+            <button
+              onClick={descargar}
+              disabled={ocupado}
+              className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              {generando ? <><Spinner /> Generando PDF...</> : '⬇ Descargar certificado PDF'}
+            </button>
+
+            {/* Botones compartir Web Share API */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => compartir('paciente')}
+                disabled={ocupado}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-semibold text-sm transition-colors ${
+                  compartiendo === 'paciente'
+                    ? 'border-teal-200 text-teal-400 cursor-wait'
+                    : 'border-teal-400 text-teal-700 hover:bg-teal-50'
+                }`}
+              >
+                {compartiendo === 'paciente' ? <Spinner /> : <WhatsAppIcon />}
+                Enviar a paciente
               </button>
               <button
-                onClick={generarPDF}
-                disabled={generando}
-                className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                onClick={() => compartir('secretaria')}
+                disabled={ocupado}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-semibold text-sm transition-colors ${
+                  compartiendo === 'secretaria'
+                    ? 'border-violet-200 text-violet-400 cursor-wait'
+                    : 'border-violet-400 text-violet-700 hover:bg-violet-50'
+                }`}
               >
-                {generando ? (
-                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Generando PDF...</>
-                ) : '⬇ Descargar certificado PDF'}
+                {compartiendo === 'secretaria' ? <Spinner /> : <WhatsAppIcon />}
+                Enviar a secretaría
               </button>
-            </div>
-
-            {/* WhatsApp y Email */}
-            <div className="grid grid-cols-2 gap-2">
-              {paciente.telefono && (
-                <button
-                  onClick={() => abrirWhatsApp(paciente.telefono!, `Hola ${paciente.nombre}, su certificado médico ${TIPO_LABELS[tipo]} está listo. Comuníquese con el consultorio para retirarlo.`)}
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-green-400 text-green-700 font-semibold text-sm hover:bg-green-50 transition-colors"
-                >
-                  <WhatsAppIcon />
-                  WA Paciente
-                </button>
-              )}
-              {paciente.email && (
-                <button
-                  onClick={() => abrirEmail(
-                    paciente.email!,
-                    `Certificado médico ${TIPO_LABELS[tipo]} — ${paciente.apellido}, ${paciente.nombre}`,
-                    textoEmail
-                  )}
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-300 text-blue-700 font-semibold text-sm hover:bg-blue-50 transition-colors"
-                >
-                  <EmailIcon />
-                  Email Paciente
-                </button>
-              )}
-              {medico?.telefono_secretaria && (
-                <button
-                  onClick={() => abrirWhatsApp(medico.telefono_secretaria!, `Certificado ${TIPO_LABELS[tipo]} para ${paciente.apellido}, ${paciente.nombre} listo para imprimir.`)}
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-green-400 text-green-700 font-semibold text-sm hover:bg-green-50 transition-colors"
-                >
-                  <WhatsAppIcon />
-                  WA Secretaría
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -328,18 +317,19 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
   )
 }
 
-function WhatsAppIcon() {
+function Spinner() {
   return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   )
 }
 
-function EmailIcon() {
+function WhatsAppIcon() {
   return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
     </svg>
   )
 }
