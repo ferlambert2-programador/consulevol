@@ -36,6 +36,10 @@ function abrirWhatsApp(telefono: string, texto: string) {
   window.open(`https://wa.me/${limpiarTelefono(telefono)}?text=${encodeURIComponent(texto)}`, '_blank')
 }
 
+function abrirEmail(email: string, subject: string, body: string) {
+  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+}
+
 export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onCertificado, refreshKey }: Props) {
   const [consultas, setConsultas] = useState<ConsultaConEvolucion[]>([])
   const [cargando, setCargando] = useState(true)
@@ -285,7 +289,7 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
                             )}
                           </div>
 
-                          {/* Derecha: PDF, copiar, WhatsApp */}
+                          {/* Derecha: PDF, copiar, email, WhatsApp */}
                           <div className="flex flex-wrap gap-2">
                             <ExportarPDF
                               modo="consulta"
@@ -304,6 +308,19 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
                             >
                               {copiado === consulta.id ? '✅ Copiado' : '📋 Copiar'}
                             </button>
+                            {paciente.email && (
+                              <button
+                                onClick={() => abrirEmail(
+                                  paciente.email!,
+                                  `Resumen consulta — ${formatFechaLarga(consulta.fecha)}`,
+                                  `${paciente.nombre} ${paciente.apellido}\n${formatFechaLarga(consulta.fecha)}\n\n${consulta.evolucion?.texto_redactado || ''}`
+                                )}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                              >
+                                <EmailIcon />
+                                Email
+                              </button>
+                            )}
                             {paciente.telefono && (
                               <button
                                 onClick={() => abrirWhatsApp(
@@ -371,6 +388,14 @@ export default function HistoriaClinica({ paciente, medico, onNuevaConsulta, onC
         )
       })}
     </div>
+  )
+}
+
+function EmailIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
   )
 }
 
