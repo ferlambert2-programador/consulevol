@@ -56,7 +56,7 @@ export default function ConfigMedico({ userId, onCerrar, onGuardado }: Props) {
     setGuardando(true); setError('')
     const { error: err } = await supabase
       .from('medico_config')
-      .upsert({ user_id: userId, ...form })
+      .upsert({ user_id: userId, ...form }, { onConflict: 'user_id' })
     if (err) {
       setError('Error al guardar: ' + err.message)
     } else {
