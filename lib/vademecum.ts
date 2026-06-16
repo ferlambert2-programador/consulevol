@@ -48,7 +48,7 @@ export const VADEMECUM: Medicamento[] = [
   { id: 30, generico: 'Espironolactona', comerciales: ['Aldactone', 'Esinosyn', 'Verospiron'], forma: 'Comprimidos', presentacion: '25mg, 100mg', categoria: 'Diurético ahorrador de K+' },
 
   // Antiagregantes / Anticoagulantes
-  { id: 31, generico: 'Aspirina (Ácido acetilsalicílico)', comerciales: ['Aspirina', 'Cardioaspirina', 'Adiro'], forma: 'Comprimidos', presentacion: '100mg, 325mg, 500mg', categoria: 'Antiagregante / AINE' },
+  { id: 31, generico: 'Aspirina (Ácido acetilsalicílico)', comerciales: ['Aspirin', 'Cardioaspirina', 'Adiro'], forma: 'Comprimidos', presentacion: '100mg, 325mg, 500mg', categoria: 'Antiagregante / AINE' },
   { id: 32, generico: 'Clopidogrel', comerciales: ['Plavix', 'Clopidogrel Genfar', 'Troken'], forma: 'Comprimidos', presentacion: '75mg', categoria: 'Antiagregante plaquetario' },
   { id: 33, generico: 'Warfarina', comerciales: ['Coumadin', 'Warfarina Sodica'], forma: 'Comprimidos', presentacion: '2.5mg, 5mg', categoria: 'Anticoagulante oral' },
   { id: 34, generico: 'Rivaroxabán', comerciales: ['Xarelto'], forma: 'Comprimidos', presentacion: '10mg, 15mg, 20mg', categoria: 'Anticoagulante oral (NOAC)' },
@@ -136,6 +136,114 @@ export const VADEMECUM: Medicamento[] = [
   { id: 94, generico: 'Zolpidem', comerciales: ['Stilnox', 'Ambien', 'Zolpidem'], forma: 'Comprimidos', presentacion: '5mg, 10mg', categoria: 'Hipnótico (no benzodiacepínico)' },
   { id: 95, generico: 'Aciclovir', comerciales: ['Zovirax', 'Aciclovir', 'Acivir'], forma: 'Comprimidos / Crema', presentacion: '200mg, 400mg, 800mg', categoria: 'Antiviral (herpesvirus)' },
   { id: 96, generico: 'Valaciclovir', comerciales: ['Valtrex', 'Valaciclovir', 'Zelitrex'], forma: 'Comprimidos', presentacion: '500mg, 1g', categoria: 'Antiviral (herpesvirus)' },
+
+  // Antihipertensivos adicionales
+  { id: 97, generico: 'Olmesartán', comerciales: ['Olmetec', 'Benicar', 'Olsar'], forma: 'Comprimidos', presentacion: '20mg, 40mg', categoria: 'ARAII / Antihipertensivo' },
+  { id: 98, generico: 'Irbesartán', comerciales: ['Aprovel', 'Avapro', 'Coaprovel'], forma: 'Comprimidos', presentacion: '75mg, 150mg, 300mg', categoria: 'ARAII / Antihipertensivo' },
+  { id: 99, generico: 'Telmisartán', comerciales: ['Micardis', 'Pritor', 'Kinzal'], forma: 'Comprimidos', presentacion: '40mg, 80mg', categoria: 'ARAII / Antihipertensivo' },
+  { id: 100, generico: 'Nebivolol', comerciales: ['Nebilet', 'Lobivon', 'Nebilox'], forma: 'Comprimidos', presentacion: '5mg', categoria: 'Betabloqueante' },
+  { id: 101, generico: 'Nifedipina', comerciales: ['Adalat', 'Nifedipina Retard', 'Osar'], forma: 'Comprimidos (liberación prolongada)', presentacion: '10mg, 20mg, 30mg, 60mg', categoria: 'Bloqueante cálcico / Antihipertensivo' },
+  { id: 102, generico: 'Diltiazem', comerciales: ['Tilazem', 'Cardizem', 'Dilzem'], forma: 'Comprimidos / Cápsulas LP', presentacion: '60mg, 90mg, 120mg, 180mg', categoria: 'Bloqueante cálcico / Antiarrítmico' },
+  { id: 103, generico: 'Verapamilo', comerciales: ['Isoptin', 'Verapamilo', 'Calan'], forma: 'Comprimidos', presentacion: '80mg, 120mg, 240mg', categoria: 'Bloqueante cálcico / Antiarrítmico' },
+
+  // Cardiovascular
+  { id: 104, generico: 'Digoxina', comerciales: ['Lanoxin', 'Digoxina'], forma: 'Comprimidos / Ampollas', presentacion: '0.25mg', categoria: 'Glucósido cardíaco / Antiarrítmico' },
+  { id: 105, generico: 'Amiodarona', comerciales: ['Cordarone', 'Atlansil', 'Amiodarona'], forma: 'Comprimidos / Ampollas', presentacion: '200mg, 150mg/3mL', categoria: 'Antiarrítmico' },
+  { id: 106, generico: 'Ivabradina', comerciales: ['Procoralan', 'Corlentor'], forma: 'Comprimidos', presentacion: '5mg, 7.5mg', categoria: 'Antianginoso (If inhibidor)' },
+  { id: 107, generico: 'Nitroglicerina', comerciales: ['Nitronal', 'Trinipatch', 'Nitroderm'], forma: 'Parche transdérmico / Aerosol sublingual', presentacion: '0.4mg/dosis, 5mg/24h, 10mg/24h', categoria: 'Nitrato / Antianginoso' },
+  { id: 108, generico: 'Mononitrato de isosorbide', comerciales: ['Monocordil', 'Imdur', 'Ismo'], forma: 'Comprimidos', presentacion: '20mg, 40mg, 60mg', categoria: 'Nitrato / Antianginoso' },
+  { id: 109, generico: 'Sacubitril + Valsartán', comerciales: ['Entresto'], forma: 'Comprimidos', presentacion: '24/26mg, 49/51mg, 97/103mg', categoria: 'ARNI / Insuficiencia cardíaca' },
+  { id: 110, generico: 'Dapagliflozina', comerciales: ['Forxiga', 'Farxiga'], forma: 'Comprimidos', presentacion: '5mg, 10mg', categoria: 'Antidiabético oral (iSGLT-2) / IC' },
+
+  // Diabetes y metabolismo
+  { id: 111, generico: 'Liraglutida', comerciales: ['Victoza', 'Saxenda'], forma: 'Solución inyectable (pluma)', presentacion: '6mg/mL', categoria: 'Antidiabético (GLP-1)' },
+  { id: 112, generico: 'Semaglutida', comerciales: ['Ozempic', 'Rybelsus', 'Wegovy'], forma: 'Inyectable / Comprimidos', presentacion: '0.5mg, 1mg, 2mg', categoria: 'Antidiabético (GLP-1)' },
+  { id: 113, generico: 'Canagliflozina', comerciales: ['Invokana'], forma: 'Comprimidos', presentacion: '100mg, 300mg', categoria: 'Antidiabético oral (iSGLT-2)' },
+  { id: 114, generico: 'Pioglitazona', comerciales: ['Actos', 'Pionix'], forma: 'Comprimidos', presentacion: '15mg, 30mg, 45mg', categoria: 'Antidiabético oral (tiazolidindiona)' },
+  { id: 115, generico: 'Insulina Lispro', comerciales: ['Humalog', 'Liprolog'], forma: 'Solución inyectable', presentacion: '100 UI/mL', categoria: 'Insulina (acción rápida)' },
+  { id: 116, generico: 'Insulina Aspártica', comerciales: ['Novorapid', 'Fiasp'], forma: 'Solución inyectable', presentacion: '100 UI/mL', categoria: 'Insulina (acción rápida)' },
+  { id: 117, generico: 'Insulina Detemir', comerciales: ['Levemir'], forma: 'Solución inyectable', presentacion: '100 UI/mL', categoria: 'Insulina (acción prolongada)' },
+
+  // Neurología / Psiquiatría (adicionales)
+  { id: 118, generico: 'Pregabalina', comerciales: ['Lyrica', 'Pregabalin', 'Lyrica CR'], forma: 'Cápsulas', presentacion: '25mg, 75mg, 150mg, 300mg', categoria: 'Antiepiléptico / Dolor neuropático' },
+  { id: 119, generico: 'Gabapentina', comerciales: ['Neurontin', 'Gabapentin', 'Gabalept'], forma: 'Cápsulas / Comprimidos', presentacion: '100mg, 300mg, 400mg, 600mg', categoria: 'Antiepiléptico / Dolor neuropático' },
+  { id: 120, generico: 'Topiramato', comerciales: ['Topamax', 'Topamac', 'Epitomax'], forma: 'Comprimidos / Cápsulas', presentacion: '25mg, 50mg, 100mg, 200mg', categoria: 'Antiepiléptico / Migraña' },
+  { id: 121, generico: 'Lamotrigina', comerciales: ['Lamictal', 'Lamotrin', 'Lambipol'], forma: 'Comprimidos', presentacion: '25mg, 50mg, 100mg, 200mg', categoria: 'Antiepiléptico / Estabilizador del ánimo' },
+  { id: 122, generico: 'Ácido valproico', comerciales: ['Depakene', 'Epival', 'Valcote'], forma: 'Comprimidos / Jarabe / Ampollas', presentacion: '200mg, 250mg, 500mg', categoria: 'Antiepiléptico / Estabilizador del ánimo' },
+  { id: 123, generico: 'Risperidona', comerciales: ['Risperdal', 'Risperidona', 'Belivon'], forma: 'Comprimidos / Solución / Inyectable', presentacion: '0.5mg, 1mg, 2mg, 3mg, 4mg', categoria: 'Antipsicótico atípico' },
+  { id: 124, generico: 'Olanzapina', comerciales: ['Zyprexa', 'Olanzapina', 'Zydis'], forma: 'Comprimidos / Inyectable', presentacion: '2.5mg, 5mg, 7.5mg, 10mg', categoria: 'Antipsicótico atípico' },
+  { id: 125, generico: 'Aripiprazol', comerciales: ['Abilify', 'Aripiprazol', 'Aristada'], forma: 'Comprimidos / Solución', presentacion: '5mg, 10mg, 15mg, 30mg', categoria: 'Antipsicótico atípico' },
+  { id: 126, generico: 'Haloperidol', comerciales: ['Haldol', 'Haloperidol', 'Serenace'], forma: 'Comprimidos / Gotas / Ampollas', presentacion: '1mg, 5mg, 10mg', categoria: 'Antipsicótico clásico' },
+  { id: 127, generico: 'Duloxetina', comerciales: ['Cymbalta', 'Duloxetina', 'Xeristar'], forma: 'Cápsulas', presentacion: '30mg, 60mg', categoria: 'IRSN / Antidepresivo / Dolor neuropático' },
+  { id: 128, generico: 'Mirtazapina', comerciales: ['Remeron', 'Mirtazapina', 'Zispin'], forma: 'Comprimidos', presentacion: '15mg, 30mg, 45mg', categoria: 'Antidepresivo noradrenérgico' },
+  { id: 129, generico: 'Bupropión', comerciales: ['Wellbutrin', 'Zyban', 'Bupropión'], forma: 'Comprimidos (liberación prolongada)', presentacion: '150mg, 300mg', categoria: 'Antidepresivo / Cesación tabáquica' },
+  { id: 130, generico: 'Melatonina', comerciales: ['Circadin', 'Melatonina', 'Slenyto'], forma: 'Comprimidos / Gotas', presentacion: '1mg, 2mg, 5mg, 10mg', categoria: 'Hipnótico / Regulador del sueño' },
+  { id: 131, generico: 'Donepezilo', comerciales: ['Aricept', 'Donepezilo', 'Eranz'], forma: 'Comprimidos', presentacion: '5mg, 10mg', categoria: 'Inhibidor colinesterasa / Alzheimer' },
+  { id: 132, generico: 'Memantina', comerciales: ['Ebixa', 'Namenda', 'Axura'], forma: 'Comprimidos / Gotas', presentacion: '5mg, 10mg, 20mg', categoria: 'Antagonista NMDA / Alzheimer' },
+  { id: 133, generico: 'Sumatriptán', comerciales: ['Imigran', 'Migratriptan', 'Sumatriptán'], forma: 'Comprimidos / Spray nasal / Inyectable', presentacion: '50mg, 100mg', categoria: 'Triptán / Migraña' },
+
+  // Respiratorio (adicionales)
+  { id: 134, generico: 'Formoterol', comerciales: ['Foradil', 'Oxis', 'Atock'], forma: 'Cápsulas inhalables / Aerosol', presentacion: '12mcg', categoria: 'Broncodilatador LABA' },
+  { id: 135, generico: 'Indacaterol', comerciales: ['Onbrez', 'Arcapta'], forma: 'Cápsulas inhalables', presentacion: '150mcg, 300mcg', categoria: 'Broncodilatador LABA' },
+  { id: 136, generico: 'Umeclidinio', comerciales: ['Incruse', 'Incruse Ellipta'], forma: 'Polvo inhalable', presentacion: '55mcg', categoria: 'Broncodilatador LAMA' },
+  { id: 137, generico: 'Budesonida + Formoterol', comerciales: ['Symbicort', 'Bufomix', 'Vannair'], forma: 'Aerosol / Polvo inhalable', presentacion: '80/4.5mcg, 160/4.5mcg', categoria: 'Corticoide inhalado + LABA' },
+  { id: 138, generico: 'Fluticasona + Vilanterol', comerciales: ['Relvar Ellipta', 'Breo Ellipta'], forma: 'Polvo inhalable', presentacion: '92/22mcg, 184/22mcg', categoria: 'Corticoide inhalado + LABA' },
+  { id: 139, generico: 'N-acetilcisteína', comerciales: ['Fluimucil', 'Mucolítico', 'Acetilcisteína'], forma: 'Sobres / Comprimidos efervescentes', presentacion: '200mg, 600mg', categoria: 'Mucolítico' },
+  { id: 140, generico: 'Ambroxol', comerciales: ['Mucosolvan', 'Ambril', 'Ambroxol'], forma: 'Jarabe / Comprimidos / Gotas', presentacion: '15mg/5mL, 30mg, 75mg', categoria: 'Mucolítico / Expectorante' },
+  { id: 141, generico: 'Bromhexina', comerciales: ['Bisolvon', 'Bromhexina', 'Fluibron'], forma: 'Comprimidos / Jarabe', presentacion: '8mg, 4mg/5mL', categoria: 'Mucolítico' },
+
+  // Gastroenterología (adicionales)
+  { id: 142, generico: 'Rabeprazol', comerciales: ['Pariet', 'Rabeprazol', 'Aciphex'], forma: 'Comprimidos', presentacion: '10mg, 20mg', categoria: 'IBP / Antiácido' },
+  { id: 143, generico: 'Lansoprazol', comerciales: ['Prevacid', 'Lansox', 'Zoton'], forma: 'Cápsulas', presentacion: '15mg, 30mg', categoria: 'IBP / Antiácido' },
+  { id: 144, generico: 'Esomeprazol', comerciales: ['Nexium', 'Emanera', 'Esomeprazol'], forma: 'Comprimidos / Ampollas', presentacion: '20mg, 40mg', categoria: 'IBP / Antiácido' },
+  { id: 145, generico: 'Sucralfato', comerciales: ['Ulcogant', 'Sucralan', 'Sucralfato'], forma: 'Comprimidos / Suspensión', presentacion: '1g', categoria: 'Citoprotector gástrico' },
+  { id: 146, generico: 'Trimebutina', comerciales: ['Debridat', 'Trimebutina'], forma: 'Comprimidos / Jarabe', presentacion: '100mg, 200mg', categoria: 'Antiespasmódico intestinal' },
+  { id: 147, generico: 'Mesalazina', comerciales: ['Salofalk', 'Asacol', 'Pentasa'], forma: 'Comprimidos / Supositorios / Enema', presentacion: '250mg, 400mg, 500mg, 1g', categoria: 'Antiinflamatorio intestinal (EII)' },
+  { id: 148, generico: 'Rifaximina', comerciales: ['Xifaxan', 'Normix', 'Rifaximin'], forma: 'Comprimidos', presentacion: '200mg, 400mg, 550mg', categoria: 'Antibiótico intestinal (EHE/SII)' },
+
+  // Reumatología / MSK
+  { id: 149, generico: 'Etoricoxib', comerciales: ['Arcoxia', 'Etoricoxib'], forma: 'Comprimidos', presentacion: '60mg, 90mg, 120mg', categoria: 'AINE (Cox-2 selectivo)' },
+  { id: 150, generico: 'Meloxicam', comerciales: ['Mobic', 'Meloxicam', 'Movalis'], forma: 'Comprimidos / Ampollas', presentacion: '7.5mg, 15mg', categoria: 'AINE (preferente Cox-2)' },
+  { id: 151, generico: 'Indometacina', comerciales: ['Indocid', 'Artrinovo', 'Indomethacin'], forma: 'Cápsulas / Supositorios', presentacion: '25mg, 50mg, 75mg', categoria: 'AINE' },
+  { id: 152, generico: 'Leflunomida', comerciales: ['Arava', 'Leflunomida'], forma: 'Comprimidos', presentacion: '10mg, 20mg', categoria: 'DMARD / Artritis reumatoidea' },
+  { id: 153, generico: 'Sulfasalazina', comerciales: ['Salazopyrin', 'Azulfidine', 'Sulfasalazina'], forma: 'Comprimidos', presentacion: '500mg', categoria: 'DMARD / EII' },
+
+  // Endocrinología
+  { id: 154, generico: 'Propiltiouracilo', comerciales: ['PTU', 'Propiltiouracilo'], forma: 'Comprimidos', presentacion: '50mg', categoria: 'Antitiroideos' },
+  { id: 155, generico: 'Calcitrol', comerciales: ['Rocaltrol', 'Calcitrol'], forma: 'Cápsulas / Solución', presentacion: '0.25mcg, 0.5mcg', categoria: 'Vitamina D activa' },
+  { id: 156, generico: 'Testosterona', comerciales: ['Nebido', 'Testex', 'Androtardyl'], forma: 'Ampollas inyectable / Gel', presentacion: '250mg/mL, 1000mg/4mL', categoria: 'Andrógeno / Terapia hormonal' },
+  { id: 157, generico: 'Estrógenos conjugados', comerciales: ['Premarin', 'Climopax'], forma: 'Comprimidos / Crema', presentacion: '0.3mg, 0.625mg, 1.25mg', categoria: 'Estrógeno / Terapia hormonal' },
+  { id: 158, generico: 'Progesterona micronizada', comerciales: ['Utrogestan', 'Prometrium'], forma: 'Cápsulas', presentacion: '100mg, 200mg', categoria: 'Progestágeno / Terapia hormonal' },
+
+  // Antiinfecciosos adicionales
+  { id: 159, generico: 'Fluconazol', comerciales: ['Diflucan', 'Fluderm', 'Fluconazol'], forma: 'Cápsulas / Suspensión / Ampollas', presentacion: '50mg, 100mg, 150mg, 200mg', categoria: 'Antifúngico' },
+  { id: 160, generico: 'Itraconazol', comerciales: ['Sporanox', 'Itraconazol', 'Itrizole'], forma: 'Cápsulas / Solución', presentacion: '100mg', categoria: 'Antifúngico' },
+  { id: 161, generico: 'Terbinafina', comerciales: ['Lamisil', 'Terbinafina', 'Micofin'], forma: 'Comprimidos / Crema', presentacion: '250mg', categoria: 'Antifúngico' },
+  { id: 162, generico: 'Nitrofurantoína', comerciales: ['Macrobid', 'Macrodantina', 'Nitrofurantoína'], forma: 'Cápsulas', presentacion: '50mg, 100mg', categoria: 'Antibiótico (ITU)' },
+  { id: 163, generico: 'Fosfomicina', comerciales: ['Monuril', 'Fosfomicina'], forma: 'Granulado (sobre)', presentacion: '3g', categoria: 'Antibiótico (ITU dosis única)' },
+  { id: 164, generico: 'Moxifloxacina', comerciales: ['Avelox', 'Moxifloxacin', 'Actira'], forma: 'Comprimidos / Ampollas', presentacion: '400mg', categoria: 'Antibiótico (fluoroquinolona)' },
+  { id: 165, generico: 'Oseltamivir', comerciales: ['Tamiflu', 'Oseltamivir'], forma: 'Cápsulas / Suspensión', presentacion: '30mg, 45mg, 75mg', categoria: 'Antiviral (influenza)' },
+
+  // Dermatología / Tópicos
+  { id: 166, generico: 'Betametasona', comerciales: ['Diprospan', 'Celestoderm', 'Betnovate'], forma: 'Crema / Ampollas inyectables', presentacion: '0.1% crema, 7mg/mL inyectable', categoria: 'Corticoide tópico/sistémico' },
+  { id: 167, generico: 'Triamcinolona', comerciales: ['Kenalog', 'Kenacort', 'Triamcinolona'], forma: 'Crema / Ampollas', presentacion: '0.1% crema, 40mg/mL', categoria: 'Corticoide tópico/inyectable' },
+  { id: 168, generico: 'Tacrolimus tópico', comerciales: ['Protopic'], forma: 'Ungüento', presentacion: '0.03%, 0.1%', categoria: 'Inmunomodulador tópico (dermatitis)' },
+
+  // Hematología / Oncología soporte
+  { id: 169, generico: 'Eritropoyetina', comerciales: ['Eprex', 'Recormon', 'Aranesp'], forma: 'Solución inyectable', presentacion: '2000 UI, 4000 UI, 10000 UI', categoria: 'Factor estimulante eritropoyético' },
+  { id: 170, generico: 'Ácido tranexámico', comerciales: ['Transamin', 'Cyklokapron'], forma: 'Comprimidos / Ampollas', presentacion: '250mg, 500mg, 1g', categoria: 'Antifibrinolítico' },
+
+  // Misceláneos frecuentes
+  { id: 171, generico: 'Baclofeno', comerciales: ['Lioresal', 'Baclofeno'], forma: 'Comprimidos', presentacion: '10mg, 25mg', categoria: 'Relajante muscular central' },
+  { id: 172, generico: 'Ciclobenzaprina', comerciales: ['Flexeril', 'Yurelax', 'Ciclobenzaprina'], forma: 'Comprimidos', presentacion: '5mg, 10mg', categoria: 'Relajante muscular' },
+  { id: 173, generico: 'Tizanidina', comerciales: ['Sirdalud', 'Tizanidina', 'Zanaflex'], forma: 'Comprimidos', presentacion: '2mg, 4mg', categoria: 'Relajante muscular central' },
+  { id: 174, generico: 'Oxibutinina', comerciales: ['Ditropan', 'Oxibutinina', 'Kentera'], forma: 'Comprimidos / Parche', presentacion: '5mg, 10mg', categoria: 'Anticolinérgico / Vejiga hiperactiva' },
+  { id: 175, generico: 'Solifenacina', comerciales: ['Vesicare', 'Solifenacina'], forma: 'Comprimidos', presentacion: '5mg, 10mg', categoria: 'Anticolinérgico / Vejiga hiperactiva' },
+  { id: 176, generico: 'Vareniclina', comerciales: ['Champix', 'Chantix'], forma: 'Comprimidos', presentacion: '0.5mg, 1mg', categoria: 'Cesación tabáquica' },
+  { id: 177, generico: 'Naltrexona', comerciales: ['Revia', 'Naltrexona', 'Vivitrol'], forma: 'Comprimidos', presentacion: '50mg', categoria: 'Antagonista opioide / Dependencia alcohol' },
+  { id: 178, generico: 'Hidróxido de aluminio + magnesio', comerciales: ['Maalox', 'Gelopectosa', 'Melox'], forma: 'Suspensión / Comprimidos masticables', presentacion: '400mg+400mg', categoria: 'Antiácido' },
+  { id: 179, generico: 'Simeticona', comerciales: ['Mysoline', 'Gas-X', 'Lefax'], forma: 'Comprimidos / Gotas', presentacion: '40mg, 80mg', categoria: 'Antiflatulento' },
+  { id: 180, generico: 'Bisacodilo', comerciales: ['Dulcolax', 'Laxoberon', 'Bisacodilo'], forma: 'Comprimidos / Supositorios', presentacion: '5mg, 10mg', categoria: 'Laxante estimulante' },
 ]
 
 export function buscarMedicamento(termino: string): Medicamento[] {
