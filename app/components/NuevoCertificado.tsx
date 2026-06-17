@@ -27,6 +27,10 @@ const TIPO_TITULOS: Record<TipoCertificado, string> = {
 
 type Destino = 'paciente' | 'secretaria'
 
+function limpiarTelefono(tel: string): string {
+  return tel.replace(/\D/g, '')
+}
+
 export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) {
   const [tipo, setTipo] = useState<TipoCertificado>('laboral')
   const [dictado, setDictado] = useState('')
@@ -119,29 +123,31 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
     setGenerando(false)
   }
 
-  const compartir = async (destino: Destino) => {
+  const enviarWhatsApp = async (destino: Destino) => {
+    const telPaciente = paciente.telefono ? limpiarTelefono(paciente.telefono) : ''
+    const telSecretaria = medico?.telefono_secretaria ? limpiarTelefono(medico.telefono_secretaria) : ''
+    const numero = destino === 'paciente' ? telPaciente : telSecretaria
+
     setCompartiendo(destino); setError('')
     const blob = await generarBlob()
     if (!blob) { setError('Error al generar PDF'); setCompartiendo(null); return }
 
-    const file = new File([blob], nombreArchivo, { type: 'application/pdf' })
-    const titulo = `${TIPO_TITULOS[tipo]} — ${paciente.apellido}, ${paciente.nombre}`
-    const texto = destino === 'paciente'
-      ? `Hola ${paciente.nombre}, le enviamos su certificado médico.`
-      : `Certificado de ${paciente.apellido}, ${paciente.nombre} para archivo.`
+    // Descargar PDF
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = nombreArchivo; a.click()
+    URL.revokeObjectURL(url)
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: titulo, text: texto })
-      } catch (e: any) {
-        if (e.name !== 'AbortError') setError('No se pudo compartir')
-      }
+    // Abrir WhatsApp con el número si está disponible
+    if (numero) {
+      const texto = destino === 'paciente'
+        ? `Hola ${paciente.nombre}, le enviamos su certificado médico. El PDF se descargó en su dispositivo.`
+        : `Certificado de ${paciente.apellido}, ${paciente.nombre}. El PDF se descargó en su dispositivo.`
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
     } else {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = nombreArchivo; a.click()
-      URL.revokeObjectURL(url)
+      setError(destino === 'paciente' ? 'El paciente no tiene teléfono registrado' : 'No hay teléfono de secretaría configurado')
     }
+
     setCompartiendo(null)
   }
 
@@ -274,7 +280,6 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
-            {/* Botón descargar */}
             <button
               onClick={descargar}
               disabled={ocupado}
@@ -283,11 +288,11 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
               {generando ? <><Spinner /> Generando PDF...</> : '⬇ Descargar certificado PDF'}
             </button>
 
-            {/* Botones compartir Web Share API */}
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => compartir('paciente')}
+                onClick={() => enviarWhatsApp('paciente')}
                 disabled={ocupado}
+                title="Descarga el PDF y abre WhatsApp del paciente"
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-semibold text-sm transition-colors ${
                   compartiendo === 'paciente'
                     ? 'border-teal-200 text-teal-400 cursor-wait'
@@ -298,8 +303,9 @@ export default function NuevoCertificado({ paciente, medico, onCerrar }: Props) 
                 Enviar a paciente
               </button>
               <button
-                onClick={() => compartir('secretaria')}
+                onClick={() => enviarWhatsApp('secretaria')}
                 disabled={ocupado}
+                title="Descarga el PDF y abre WhatsApp de secretaría"
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-semibold text-sm transition-colors ${
                   compartiendo === 'secretaria'
                     ? 'border-violet-200 text-violet-400 cursor-wait'
