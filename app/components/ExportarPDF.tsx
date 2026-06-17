@@ -27,6 +27,10 @@ type Props = PropsConsulta | PropsHC
 
 type Destino = 'paciente' | 'secretaria'
 
+function limpiarTelefono(tel: string): string {
+  return tel.replace(/\D/g, '')
+}
+
 export default function ExportarPDF(props: Props) {
   const [generando, setGenerando] = useState(false)
   const [compartiendo, setCompartiendo] = useState<Destino | null>(null)
@@ -91,33 +95,32 @@ export default function ExportarPDF(props: Props) {
     setGenerando(false)
   }
 
-  const compartir = async (destino: Destino) => {
+  const enviarWhatsApp = async (destino: Destino) => {
+    const telPaciente = props.paciente.telefono ? limpiarTelefono(props.paciente.telefono) : ''
+    const telSecretaria = props.medico?.telefono_secretaria ? limpiarTelefono(props.medico.telefono_secretaria) : ''
+    const numero = destino === 'paciente' ? telPaciente : telSecretaria
+
     setCompartiendo(destino); setError('')
     const blob = await generarBlob()
     if (!blob) { setError('Error al generar PDF'); setCompartiendo(null); return }
 
-    const file = new File([blob], nombreArchivo, { type: 'application/pdf' })
-    const nombre = `${props.paciente.apellido}, ${props.paciente.nombre}`
-    const titulo = props.modo === 'consulta'
-      ? `Evolución — ${nombre}`
-      : `Historia clínica — ${nombre}`
-    const texto = destino === 'paciente'
-      ? `Hola ${props.paciente.nombre}, le enviamos su documentación médica.`
-      : `Documentación de ${nombre} para archivo.`
+    // Descargar PDF
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = nombreArchivo; a.click()
+    URL.revokeObjectURL(url)
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: titulo, text: texto })
-      } catch (e: any) {
-        if (e.name !== 'AbortError') setError('No se pudo compartir')
-      }
+    // Abrir WhatsApp con el número si está disponible
+    if (numero) {
+      const nombre = `${props.paciente.apellido}, ${props.paciente.nombre}`
+      const texto = destino === 'paciente'
+        ? `Hola ${props.paciente.nombre}, le enviamos su documentación médica. El PDF se descargó en su dispositivo.`
+        : `Documentación de ${nombre}. El PDF se descargó en su dispositivo.`
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
     } else {
-      // Fallback desktop: descarga directa
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url; a.download = nombreArchivo; a.click()
-      URL.revokeObjectURL(url)
+      setError(destino === 'paciente' ? 'El paciente no tiene teléfono registrado' : 'No hay teléfono de secretaría configurado')
     }
+
     setCompartiendo(null)
   }
 
@@ -141,33 +144,36 @@ export default function ExportarPDF(props: Props) {
           {generando ? <Spinner /> : <>📄 {label}</>}
         </button>
 
-        {/* Enviar al paciente */}
-        <button
-          onClick={() => compartir('paciente')}
-          disabled={ocupado}
-          title="Compartir PDF con el paciente"
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-            compartiendo === 'paciente'
-              ? 'border-teal-200 text-teal-400 cursor-wait'
-              : 'border-teal-300 text-teal-700 hover:bg-teal-50'
-          }`}
-        >
-          {compartiendo === 'paciente' ? <Spinner /> : <><WhatsAppIcon /> Paciente</>}
-        </button>
+        {/* Botones de WhatsApp solo en modo HC completa */}
+        {props.modo === 'hc' && (
+          <>
+            <button
+              onClick={() => enviarWhatsApp('paciente')}
+              disabled={ocupado}
+              title="Descargar PDF y abrir WhatsApp del paciente"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                compartiendo === 'paciente'
+                  ? 'border-teal-200 text-teal-400 cursor-wait'
+                  : 'border-teal-300 text-teal-700 hover:bg-teal-50'
+              }`}
+            >
+              {compartiendo === 'paciente' ? <Spinner /> : <><WhatsAppIcon /> Paciente</>}
+            </button>
 
-        {/* Enviar a secretaria */}
-        <button
-          onClick={() => compartir('secretaria')}
-          disabled={ocupado}
-          title="Compartir PDF con secretaría"
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-            compartiendo === 'secretaria'
-              ? 'border-violet-200 text-violet-400 cursor-wait'
-              : 'border-violet-300 text-violet-700 hover:bg-violet-50'
-          }`}
-        >
-          {compartiendo === 'secretaria' ? <Spinner /> : <><WhatsAppIcon /> Secretaría</>}
-        </button>
+            <button
+              onClick={() => enviarWhatsApp('secretaria')}
+              disabled={ocupado}
+              title="Descargar PDF y abrir WhatsApp de secretaría"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                compartiendo === 'secretaria'
+                  ? 'border-violet-200 text-violet-400 cursor-wait'
+                  : 'border-violet-300 text-violet-700 hover:bg-violet-50'
+              }`}
+            >
+              {compartiendo === 'secretaria' ? <Spinner /> : <><WhatsAppIcon /> Secretaría</>}
+            </button>
+          </>
+        )}
       </div>
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>
